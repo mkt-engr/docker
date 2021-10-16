@@ -38,3 +38,53 @@ grep "Hello" test.txt -n
 find / -type d -name nginx | xargs grep -r html
 # -r はrecursiveの略
 ```
+
+- ファイル作成
+
+```
+touch index.txt
+```
+
+- ファイルに文字書く
+
+```
+# 追記(>が２つ)
+echo "＜追記したい文字列＞" >> index.txt
+# 上書き（>が一つ）
+echo "＜追記したい文字列＞" > index.txt
+```
+
+- --help よりも詳しくコマンドを知りたい
+
+```
+man ls
+```
+
+# セクション 3
+
+docker のイメージを取得
+
+```
+docker pull nginx
+```
+
+watch コマンドは定期的に入力したコマンドを打ってくれる。
+watch コマンドがなかったので brew でインストールする。
+
+```
+brew install watch
+```
+
+```
+watch -t "docker ps"
+```
+
+これで２秒毎に`docker ps`コマンドを実行してくれる
+
+```
+docker images
+```
+
+でダウンロードされたイメージを見る。
+
+履歴を見る
