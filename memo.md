@@ -447,3 +447,103 @@ docker rmi -f $(docker images -a -q)
 ## Docker compose
 
 複数のコンテナを同時に起動したい場合に`docker-compose`を使う。
+
+バックグラウンドで起動するには`-d`をつける。
+
+```sh
+docker-compose -f docker-compose.yaml up -d
+```
+
+コンテナの停止と削除をするときは down を使う。
+
+```bash
+docker-compose -f docker-compose.yaml down
+```
+
+ログを見るときは
+
+```
+docker-compose -f docker-compose.yaml logs -f
+```
+
+### docker-compose でコンテナレプリカを複数起動
+
+複数起動するときは yaml から
+
+- `container_name`を削除する。
+- `ports`を範囲指定する。
+
+* docker-compose.replicas.yaml
+
+```yaml
+services:
+  nginx:
+    image: nginx:latest
+    # container_name: docker_compose_nginx #これを削除する。
+    environment:
+      - env_key=env_value
+    # ports: - "80:80"としていた。
+    ports:
+      - "80-90:80"
+    volumes:
+      - ${PWD}:/usr/share/nginx/html:ro
+    # roはread only
+  node:
+  ~~~~
+```
+
+- `--scale`で nginx のコンテナを３つ作成する。
+
+```sh
+docker-compose -f docker-compose.replicas.yaml up --scale nginx=3
+```
+
+ただし curl はレプリカを作成できない。なぜなら以下のようにコンテナ名(`container_name`)を指定してあるから
+
+```yml
+curl:
+  image: curlimages/curl:7.68.0
+  container_name: docker_compose_curl
+  command: ["sleep", "500"]
+  ports:
+    - "8080:8080"
+```
+
+### コンテナ同士のネットワーク
+
+docker-compose で定義されたコンテナはコンテナ同士で通信ができる。
+
+- docker-compose.yaml で docker-compose コマンドを実行する。
+
+```bash
+docker-compose -f docker-compose.yaml up -d
+```
+
+- Ubuntu コンテナに入る
+
+```sh
+docker exec -it docker_compose_ubuntu bash
+```
+
+- curl コマンドをインストール
+
+```sh
+apt update && apt install -y curl
+```
+
+- Ubuntu から Nginx に通信ができるか確認
+
+```sh
+curl docker_compose_nginx:80 # output:hello world
+# curl ＜container_name＞:＜ポート＞
+```
+
+#### docker run で起動したコンテナから nginx にアクセスできるかやってみる。
+
+つながらない。
+
+```sh
+docker run -it --rm curlimages/curl:7.68.0 sh
+curl docker_compose_nginx:80
+# output:curl: (6) Could not resolve host: docker_compose_nginx
+```
