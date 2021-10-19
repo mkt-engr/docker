@@ -547,3 +547,82 @@ docker run -it --rm curlimages/curl:7.68.0 sh
 curl docker_compose_nginx:80
 # output:curl: (6) Could not resolve host: docker_compose_nginx
 ```
+
+# セクション 9
+
+## 4 つの Docker ネットワークモード
+
+全然わからん。
+
+参考：https://qiita.com/TsutomuNakamura/items/ed046ee21caca4a2ffd9
+
+- bridge ネットワーク
+  ホスト（我々の PC）から IP アドレスが振り分けられるのでホストとコンテナの IP アドレスの範囲は異なる。
+
+`docker run`でネットワークを指定しなければデフォルトで bridge ネットワークが作られる。
+
+- host ネットワーク
+
+8080:80(host:container)のように IP を対応付けることはできない。（我々の PC から IP アドレスが振り分けられていないので）
+
+- none ネットワーク
+  コンテナは Bridge にも Host ネットワークにもリンクされず IP アドレスが無いので接続不可になる。
+
+- overlay ネットワーク
+  k8s で使われるっぽい
+
+### ネットワークの表示
+
+```sh
+docker network ls
+```
+
+### ネットワークの作成
+
+```sh
+docker network create --driver bridge custom_bridge
+# docker network create --driver ＜bridge|none|host|overlay＞ ＜ネットワークの名前＞
+```
+
+docker run 時にネットワークを指定するには`--network=＜作成したネットワーク名＞`とする。
+
+```sh
+docker run --network=none --rm -d --name none -p 80:80 nginx
+```
+
+### ネットワークの削除
+
+```
+docker network rm ＜ネットワークの名前＞
+```
+
+# セクション 10
+
+Docker Volume のマウント
+
+Docker のストレージはコンテナ内ではなくホスト上に保存する。
+`docker run -volume /host/dir/:/container/dir`みたいにマッピングして Volume をマウントしたよな。
+
+コンテナ上の Volume を変更するとホスト上のファイルも変更される。
+
+- `docker run`コマンドで`--volume`でマウントする。その後 Ubuntu コンテナに入りファイルを作成する。
+
+```sh
+docker run -d --volume $(pwd):/home --name test --rm -it busybox sleep 50
+# -i:--interactive ：ターミナルで引き続きコマンドが打てるようになる(コンテナ内の標準出力(コンテナの中のターミナルのログみたいな)とホスト（コンソール）の標準出力をつなげる)
+# -t:--tty(tele type writerの略)　：コンテナで擬似的なターミナルを作る（新しいコンテナの中に疑似ターミナル (pseudo-tty) を割り当てる）
+## http://docs.docker.jp/v1.10/engine/userguide/containers/dockerizing.html
+
+# コンテナに入る
+docker exec -it test sh
+
+# ここからコンテナ内で動く
+cd home/
+# コンテナ内のテキストファイルを上書き
+echo "hi from container" > from_container.txt
+exit
+
+# コンテナ内で書き換えた内容がホストにも反映されているか確認
+cat from_container.txt
+# output : hi from container
+```
