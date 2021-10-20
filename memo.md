@@ -626,3 +626,79 @@ exit
 cat from_container.txt
 # output : hi from container
 ```
+
+# セクション 11 コンテナオーケストレーション
+
+コンテナオーケストレーション：複数コンテナを複数ホスト（サーバー）に割り当てること
+
+## Docker Swarm と Kubernetes の違い
+
+Swarm は実戦向きでない。
+どちらも Single Host から Multi Host にしてホストがダウンしたときのダウンタイムを減らすのが目的。
+
+## Docker Swarm のコマンド
+
+- Docker Swarm の初期化
+
+```sh
+docker info # SwarmのStatusをチェック
+docker swarm init
+docker node ls # SwarmのNodeをリストアップ
+```
+
+- Docker Swarm の Service を起動
+
+```sh
+docker service create --name helloworld alpine:3.10 ping docker.com
+# docker service create --name ＜好きな名前＞ alpine:3.10 ping
+docker service ls
+docker service inspect --pretty helloworld
+# --prettyで整形して表示する
+```
+
+- Docker Swarm の Service をスケールアップ
+
+```sh
+docker service scale helloworld=3
+#docker service scale ＜docker service createで指定した名前＞=3
+```
+
+- Service をローリングアップデート
+
+```sh
+docker service update --image alpine:3.11 helloworld
+# docker service update --image ＜イメージ:バージョン＞ ＜作成したサービスの名前＞
+```
+
+- Service の削除
+
+```sh
+docker service rm ＜サービスの名前＞
+```
+
+## Kubernetes のデモ
+
+Minikube を起動してクラスタを作成
+
+```sh
+minikube start
+```
+
+エラーが出た
+
+```
+❌  Exiting due to GUEST_PROVISION: Failed to start host: driver start: Error setting up host only network on machine start: /usr/local/bin/VBoxManage hostonlyif ipconfig vboxnet3 --ip 192.168.99.1 --netmask 255.255.255.0 failed:
+VBoxManage: error: Code E_ACCESSDENIED (0x80070005) - Access denied (extended info not available)
+VBoxManage: error: Context: "EnableStaticIPConfig(Bstr(pszIp).raw(), Bstr(pszNetmask).raw())" at line 242 of file VBoxManageHostonly.cpp
+```
+
+https://128mots.com/index.php/en/2021/01/31/exiting-due-to-guest_provision/
+
+これを見て
+
+```
+minikube delete
+minikube start --driver=docker
+```
+
+で問題なさそう？
